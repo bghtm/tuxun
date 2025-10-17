@@ -5,7 +5,6 @@ import subprocess
 import traceback
 import base64
 
-# 常量定义
 CHINA_URL = "tuxun.fun/api/v0/tuxun/mapProxy/getPanoInfo"
 GLOBAL_URL = "tile.chao-fan.com/$rpc/google.internal.maps.mapsjs.v1.MapsJsInternalService/GetMetadata"
 
