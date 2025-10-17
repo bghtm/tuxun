@@ -18,11 +18,18 @@ USER_DATA_DIR = "dev_profile_py"  # 简化路径，默认当前目录
 # 可选浏览器: "edge" 或 "chrome"
 BROWSER = "edge"
 
+# 手动指定浏览器路径，如果为空则从注册表查找
+MANUAL_BROWSER_PATH = ""  # e.g. "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
+
 browser_proc = None  # 浏览器进程全局变量
 
 # ---------------- 函数 ----------------
 def find_browser_path(browser_name="edge"):
-    """从注册表查找 Edge 或 Chrome 的安装路径"""
+    """从手动路径或注册表查找 Edge 或 Chrome 的安装路径"""
+    # 优先使用手动指定路径
+    if MANUAL_BROWSER_PATH and os.path.isfile(MANUAL_BROWSER_PATH):
+        return MANUAL_BROWSER_PATH
+
     browser_name = browser_name.lower()
     if browser_name == "edge":
         exe_name = "msedge.exe"
@@ -89,7 +96,7 @@ def cleanup():
 # ---------------- 主程序 ----------------
 def main():
     global browser_proc
-    browser_path = find_browser_path(BROWSER) or sys.exit(f"❌ 未找到 {BROWSER}，请确认已安装")
+    browser_path = find_browser_path(BROWSER) or sys.exit(f"❌ 未找到 {BROWSER}，请确认已安装或手动指定路径")
 
     print(f"✅ 找到并启动 {BROWSER}: {browser_path}")
     browser_proc = start_browser(browser_path)
