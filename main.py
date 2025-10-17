@@ -11,7 +11,7 @@ import pychrome
 import help  # 导入拦截模块
 
 # ---------------- 配置部分 ----------------
-DEBUG_PORT = 9222
+DEBUG_PORT = 1145
 DEVTOOLS_URL = f"http://127.0.0.1:{DEBUG_PORT}/json"
 TARGET_HOME_PAGE = "https://tuxun.fun/"
 USE_SEPARATE_PROFILE = True
@@ -110,7 +110,7 @@ def main():
     time.sleep(2)
 
     # 初始化 handler
-    help.init_handler(browser, tab, msedge, print)
+    help.init_handler(browser, tab, msedge)
     tab.set_listener("Network.responseReceived", help.on_response_received)
 
     print(f"✅ 已附加到 {TARGET_HOME_PAGE}，触发请求后会输出结果。按 Ctrl+C 退出。")
