@@ -1,5 +1,5 @@
 import json
-import base64
+import requests
 import re
 import subprocess
 import traceback
@@ -20,15 +20,32 @@ def init_handler(_browser, _tab, _edge_path, _logger):
     browser, tab, edge_path, logger = _browser, _tab, _edge_path, _logger
     logger.info("✅ 拦截模块初始化完成。")
 
-
 def _safe_get_response_body(reqid: str):
-    """安全地获取响应体"""
+    """
+    安全地获取响应体。
+    - 如果 requestId 无效或请求已完成导致无法获取 body，则返回 None。
+    - 自动处理 base64 编码。
+    """
     try:
         result = tab.call_method("Network.getResponseBody", requestId=reqid)
-        body = result.get("body", "")
+        if not result:
+            logger.warning(f"⚠️ Network.getResponseBody 返回空结果，requestId={reqid}")
+            return None
+
+        body = result.get("body")
+        if body is None:
+            logger.warning(f"⚠️ Network.getResponseBody body 为空，requestId={reqid}")
+            return None
+
         if result.get("base64Encoded"):
-            body = base64.b64decode(body).decode(errors="ignore")
+            try:
+                body = base64.b64decode(body).decode(errors="ignore")
+            except Exception as e:
+                logger.warning(f"⚠️ base64 解码失败: {e}")
+                return None
+
         return body
+
     except Exception as e:
         logger.warning(f"⚠️ Network.getResponseBody 调用失败: {e}")
         return None
@@ -71,15 +88,16 @@ def on_response_received(**params):
         if CHINA_URL in url:
             logger.info(f"🌐 捕获到 China 请求：{url}")
             try:
-                body = _safe_get_response_body(reqid)
+                body=requests.get(url).text
+                logger.info(f"🗒 获取返回数据：{body}")
                 data = json.loads(body)
                 lat = data.get("data", {}).get("bd09Lat")
                 lng = data.get("data", {}).get("bd09Lng")
                 _handle_coords(lat, lng, "China")
             except json.JSONDecodeError:
-                logger.error("❌ China 响应不是合法 JSON。")
+                logger.error(f"❌ {url} 响应不是合法 JSON。")
             except Exception as e:
-                logger.error(f"❌ China 解析失败: {e}")
+                logger.error(f"❌ {url} 解析失败: {e}")
                 logger.debug(traceback.format_exc())
             return
 
@@ -88,6 +106,11 @@ def on_response_received(**params):
             logger.info(f"📡 捕获到 Global 响应：{url}")
             try:
                 body = _safe_get_response_body(reqid)
+                if not body:
+                    logger.warning(f"⚠️ {url}: 响应体为空，跳过 Global 解析")
+                    return
+                logger.info(f"🗒 获取返回数据：{body}")
+
                 coords = re.findall(r"-?\d+\.\d{5,}", body)
                 if len(coords) >= 2:
                     _handle_coords(coords[0], coords[1], "Global")
