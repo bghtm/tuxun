@@ -8,9 +8,12 @@ import base64
 # 常量定义
 CHINA_URL = "tuxun.fun/api/v0/tuxun/mapProxy/getPanoInfo"
 GLOBAL_URL = "tile.chao-fan.com/$rpc/google.internal.maps.mapsjs.v1.MapsJsInternalService/GetMetadata"
-#GEOCODE_URL = "https://www.google.com/maps/search/{lat},{lng}/"
+
+GEOCODE_URL = "https://www.google.com/maps/search/{lat},{lng}/"
 #GEOCODE_URL = "https://uri.amap.com/marker?position={lng},{lat}"
-GEOCODE_URL = "https://api.map.baidu.com/marker?location={lat},{lng}&output=html"
+#GEOCODE_URL = "https://api.map.baidu.com/marker?location={lat},{lng}&output=html"
+
+
 # 全局变量
 browser = tab = edge_path  = None
 last_coords = [None, None]
