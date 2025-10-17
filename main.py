@@ -13,16 +13,14 @@ DEVTOOLS_URL = f"http://127.0.0.1:{DEBUG_PORT}/json"
 TARGET_HOME_PAGE = "https://tuxun.fun/"
 
 USE_SEPARATE_PROFILE = True
-USER_DATA_DIR = "dev_profile_py"  # 简化路径，默认当前目录
+USER_DATA_DIR = "tuxun"  # 简化路径，默认当前目录
 
 # 可选浏览器: "edge" 或 "chrome"
 BROWSER = "edge"
-
 # 手动指定浏览器路径，如果为空则从注册表查找
 MANUAL_BROWSER_PATH = ""  # e.g. "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
 
 browser_proc = None  # 浏览器进程全局变量
-
 # ---------------- 函数 ----------------
 def find_browser_path(browser_name="edge"):
     """从手动路径或注册表查找 Edge 或 Chrome 的安装路径"""
