@@ -6,7 +6,6 @@ import atexit
 import sys
 import tempfile
 import winreg
-import logging
 import pychrome
 
 import help  # 导入拦截模块
@@ -17,37 +16,7 @@ DEVTOOLS_URL = f"http://127.0.0.1:{DEBUG_PORT}/json"
 TARGET_HOME_PAGE = "https://tuxun.fun/"
 USE_SEPARATE_PROFILE = True
 USER_DATA_DIR = os.path.abspath(os.path.join(tempfile.gettempdir(), "edge_dev_profile_py"))
-LOG_DIR = os.path.join(os.getcwd(), "logs")
-LOG_FILE = os.path.join(LOG_DIR, "runtime.log")
-# ------------------------------------------------
-
-
-# =============== 日志系统初始化 ===============
-def setup_logger():
-    os.makedirs(LOG_DIR, exist_ok=True)
-    logger = logging.getLogger("EdgeInterceptor")
-    logger.setLevel(logging.DEBUG)
-
-    # 控制台输出
-    ch = logging.StreamHandler()
-    ch.setLevel(logging.DEBUG)
-    ch.setFormatter(logging.Formatter("[%(asctime)s] [%(levelname)s] %(message)s", "%H:%M:%S"))
-
-    # 文件保存
-    fh = logging.FileHandler(LOG_FILE, encoding="utf-8")
-    fh.setLevel(logging.DEBUG)
-    fh.setFormatter(logging.Formatter("[%(asctime)s] [%(levelname)s] %(message)s", "%Y-%m-%d %H:%M:%S"))
-
-    logger.addHandler(ch)
-    logger.addHandler(fh)
-
-    logger.info("📄 日志系统已初始化，日志保存至 logs/runtime.log")
-    return logger
-
-
-logger = setup_logger()
-# =============================================
-
+# -----------------------------------------
 
 def find_msedge_path():
     """从注册表查找 Edge 可执行路径"""
@@ -106,6 +75,8 @@ def cleanup():
                 edge_proc.kill()
             except Exception:
                 pass
+
+
 atexit.register(cleanup)
 
 
@@ -113,41 +84,41 @@ def main():
     global edge_proc
     msedge = find_msedge_path()
     if not msedge:
-        logger.error("❌ 未在注册表中找到 msedge.exe，请确认 Edge 已安装。")
+        print("❌ 未在注册表中找到 msedge.exe，请确认 Edge 已安装。")
         sys.exit(1)
 
-    logger.info(f"✅ 找到 Edge: {msedge}")
-    logger.info("🚀 启动 Edge（带 remote debugging）...")
+    print(f"✅ 找到 Edge: {msedge}")
+    print("🚀 启动 Edge（带 remote debugging）...")
     edge_proc = start_edge(msedge)
 
     try:
         tabs = wait_devtools(timeout=15.0)
     except TimeoutError as e:
-        logger.error(f"等待 DevTools 超时: {e}")
+        print(f"等待 DevTools 超时: {e}")
         cleanup()
         sys.exit(1)
 
-    logger.info(f"DevTools 已就绪，共 {len(tabs)} 个标签页。")
+    print(f"DevTools 已就绪，共 {len(tabs)} 个标签页。")
     browser = pychrome.Browser(url=f"http://127.0.0.1:{DEBUG_PORT}")
 
     tab = browser.list_tab()[0]
     tab.start()
     tab.call_method("Network.enable")
 
-    logger.info(f"🌐 自动打开主页：{TARGET_HOME_PAGE}")
+    print(f"🌐 自动打开主页：{TARGET_HOME_PAGE}")
     tab.call_method("Page.navigate", url=TARGET_HOME_PAGE)
     time.sleep(2)
 
     # 初始化 handler
-    help.init_handler(browser, tab, msedge, logger)
+    help.init_handler(browser, tab, msedge, print)
     tab.set_listener("Network.responseReceived", help.on_response_received)
 
-    logger.info(f"✅ 已附加到 {TARGET_HOME_PAGE}，触发请求后会输出结果。按 Ctrl+C 退出。")
+    print(f"✅ 已附加到 {TARGET_HOME_PAGE}，触发请求后会输出结果。按 Ctrl+C 退出。")
     try:
         while True:
             time.sleep(1)
     except KeyboardInterrupt:
-        logger.info("🛑 用户中断退出。")
+        print("🛑 用户中断退出。")
     finally:
         tab.stop()
         cleanup()
